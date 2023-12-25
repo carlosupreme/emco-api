@@ -1,6 +1,6 @@
-import { AuthenticateError } from "../../domain/AuthenticateError";
-import { User } from "../../domain/User";
-import { UserRepository } from "../../domain/UserRepository";
+import { User } from "../domain/User";
+import { UserAlreadyExists } from "../domain/exceptions/UserAlreadyExists";
+import { UserRepository } from "../domain/UserRepository";
 
 export class RegisterUser {
   private readonly userRepository: UserRepository;
@@ -11,8 +11,9 @@ export class RegisterUser {
 
   async register(user: User): Promise<void> {
     const usernameIsTaken = await this.userRepository.exists(user);
+    
     if (usernameIsTaken) {
-      throw new AuthenticateError("User already exists. Try another username");
+      throw new UserAlreadyExists(user.username.value);
     }
 
     this.userRepository.save(user);
