@@ -1,12 +1,13 @@
 import { User } from "../domain/User";
 import { UserRepository } from "../domain/UserRepository";
 import { MySQLConnection } from "../../shared/infrastructure/MySQLConnection";
+import { RowDataPacket } from "mysql2";
 
-type UserPrimitive = {
+interface UserPrimitive extends RowDataPacket {
   id: string;
   username: string;
   password: string;
-};
+}
 
 export class MySQLUserRepository implements UserRepository {
   readonly connection: MySQLConnection;
@@ -16,26 +17,25 @@ export class MySQLUserRepository implements UserRepository {
   }
 
   findByUsername = async (username: string): Promise<User | undefined> => {
-    const [rows, _fields] = await this.connection.pool.query(
+    const [rows, _fields] = await this.connection.pool.query<UserPrimitive[]>(
       "SELECT * FROM users WHERE username = ? LIMIT 1",
       [username]
     );
-    const results = <UserPrimitive[]>rows;
 
-    if (results.length === 0) {
+    if (rows.length === 0) {
       return undefined;
     }
 
-    return User.fromPrimitives(results[0]);
+    return User.fromPrimitives(rows[0]);
   };
 
   exists = async (user: User): Promise<boolean> => {
-    const [rows, _fields] = await this.connection.pool.query(
+    const [rows, _fields] = await this.connection.pool.query<UserPrimitive[]>(
       "SELECT * FROM users WHERE username = ? LIMIT 1",
       [user.username.value]
     );
 
-    return (<UserPrimitive[]>rows).length > 0;
+    return rows.length > 0;
   };
 
   save = async (user: User): Promise<void> => {

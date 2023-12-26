@@ -20,8 +20,8 @@ export class AuthController {
   }
 
   login = async (req: Request, res: Response): Promise<void> => {
-    const { username, password } = req.body;
     try {
+      const { username, password } = req.body;
       const loginResponse = await this.authenticateUser.login(
         username,
         password
