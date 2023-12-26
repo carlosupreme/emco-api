@@ -12,11 +12,11 @@ export abstract class ValueObject<T extends Primitives> {
 
   private ensureValueIsDefined(value: T): void {
     if (value === null || value === undefined) {
-      throw new InvalidArgumentError("Value must be defined");
+      throw new InvalidArgumentError(`${this.constructor.name} must be defined`);
     }
 
     if ((value instanceof String || typeof value === "string") && value.trim().length === 0) {
-      throw new InvalidArgumentError("Value string cannot be empty");
+      throw new InvalidArgumentError(`${this.constructor.name} cannot be empty`);
     }
   }
 
