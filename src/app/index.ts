@@ -15,5 +15,5 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/auth", authRoutes);
 
 app.listen(3000, () => {
-  console.log("Server runnning on port 3000");
+  console.log("Server running on port 3000");
 });

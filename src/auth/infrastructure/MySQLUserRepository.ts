@@ -1,7 +1,6 @@
 import { User } from "../domain/User";
 import { UserRepository } from "../domain/UserRepository";
 import { MySQLConnection } from "../../shared/infrastructure/MySQLConnection";
-import { AuthenticateError } from "../domain/exceptions/AuthenticateError";
 
 type UserPrimitive = {
   id: string;
@@ -16,7 +15,7 @@ export class MySQLUserRepository implements UserRepository {
     this.connection = connection;
   }
 
-  async findByUsername(username: string): Promise<User> {
+  findByUsername = async (username: string): Promise<User | undefined> => {
     const [rows, _fields] = await this.connection.pool.query(
       "SELECT * FROM users WHERE username = ? LIMIT 1",
       [username]
@@ -24,25 +23,25 @@ export class MySQLUserRepository implements UserRepository {
     const results = <UserPrimitive[]>rows;
 
     if (results.length === 0) {
-      throw new AuthenticateError();
+      return undefined;
     }
 
     return User.fromPrimitives(results[0]);
-  }
+  };
 
-  async exists(user: User): Promise<boolean> {
+  exists = async (user: User): Promise<boolean> => {
     const [rows, _fields] = await this.connection.pool.query(
       "SELECT * FROM users WHERE username = ? LIMIT 1",
       [user.username.value]
     );
 
     return (<UserPrimitive[]>rows).length > 0;
-  }
+  };
 
-  async save(user: User): Promise<void> {
+  save = async (user: User): Promise<void> => {
     await this.connection.pool.query(
       "INSERT INTO users(id, username, password) VALUES(?, ?, ?)",
       Object.values(user.toPrimitives())
     );
-  }
+  };
 }

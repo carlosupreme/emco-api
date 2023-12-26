@@ -1,21 +1,29 @@
 import { AuthenticateError } from "../domain/exceptions/AuthenticateError";
-import { User } from "../domain/User";
+import { JWTProvider } from "../domain/JWTProvider";
+import { LoginResponse } from "../domain/LoginResponse";
 import { UserRepository } from "../domain/UserRepository";
 
 export class AuthenticateUser {
-  private readonly userRepository: UserRepository;
+  private userRepository: UserRepository;
+  private jsonWebTokenProvider: JWTProvider;
 
-  constructor(userRepository: UserRepository) {
+  constructor(userRepository: UserRepository, JWTProvider: JWTProvider) {
     this.userRepository = userRepository;
+    this.jsonWebTokenProvider = JWTProvider;
   }
 
-  async login(username: string, password: string): Promise<User> {
+  login = async (
+    username: string,
+    password: string
+  ): Promise<LoginResponse> => {
     const user = await this.userRepository.findByUsername(username);
 
-    if (!user.passwordMatches(password)) {
+    if (user == undefined || !user.passwordMatches(password)) {
       throw new AuthenticateError();
     }
 
-    return user;
-  }
+    const token = this.jsonWebTokenProvider.generate({ userId: user.id.value });
+
+    return { user, token };
+  };
 }

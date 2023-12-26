@@ -1,5 +1,5 @@
 import { createPool, Pool } from "mysql2/promise";
-import credentials from "./MySQLCredentials";
+import credentials from "./config/MySQLCredentials";
 
 export class MySQLConnection {
   private static instance: MySQLConnection;
