@@ -5,6 +5,10 @@ import { UserId } from "../../auth/domain/value-objects/UserId";
 import { Profile } from "../domain/Profile";
 import { SchoolData } from "../domain/SchoolData";
 
+interface CountResult extends RowDataPacket {
+  count: number;
+}
+
 interface ProfilePrimitive extends RowDataPacket {
   id: string;
   userId: string;
@@ -26,6 +30,15 @@ export class MySQLProfileRepository implements ProfileRepository {
     this.connection = connection;
   }
 
+  keyExists = async (key: string, value: any): Promise<boolean> => {
+    const [rows, _] = await this.connection.pool.query<CountResult[]>(
+      `SELECT COUNT(*) as count FROM profiles WHERE ${key} = ?`,
+      [value]
+    );
+
+    return rows[0].count !== 0;
+  };
+
   save = async (profile: Profile, schoolData: SchoolData): Promise<void> => {
     const onlyStrings = Object.values(profile.toPrimitives()).filter(
       (i) => typeof i != "object"
@@ -43,7 +56,7 @@ export class MySQLProfileRepository implements ProfileRepository {
   };
 
   findByUserId = async (userId: UserId): Promise<Profile | undefined> => {
-    const [row, _fields] = await this.connection.pool.query<ProfilePrimitive[]>(
+    const [row, _] = await this.connection.pool.query<ProfilePrimitive[]>(
       "SELECT * FROM profiles WHERE user_id = ? LIMIT 1",
       [userId.value]
     );
