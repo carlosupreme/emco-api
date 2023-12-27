@@ -1,12 +1,10 @@
 import { User } from "../domain/User";
-import { UserAlreadyExists } from "../domain/exceptions/UserAlreadyExists";
 import { UserRepository } from "../domain/UserRepository";
 import { Profile } from "../../profile/domain/Profile";
 import { ProfileRepository } from "../../profile/domain/ProfileRepository";
 import { SchoolData } from "../../profile/domain/SchoolData";
-import { EmailAlreadyExists } from "../../profile/domain/exceptions/EmailAlreadyExists";
-import { PhoneAlreadyExists } from "../../profile/domain/exceptions/PhoneAlreadyExists";
-import { SchoolIdAlreadyExists } from "../../profile/domain/exceptions/SchoolIdAlreadyExists";
+import { ErrorWrapper } from "../../shared/domain/errors/ErrorWrapper";
+import { RegisterError } from "../domain/errors/RegisterError";
 
 export class RegisterUser {
   private userRepository: UserRepository;
@@ -24,28 +22,40 @@ export class RegisterUser {
     user: User,
     profile: Profile,
     schoolData: SchoolData
-  ): Promise<void> => {
-    const usernameIsTaken = await this.userRepository.exists(user);
+  ): Promise<void | ErrorWrapper> => {
+    const errorWrapper = new ErrorWrapper("Register");
+    await this.validate(errorWrapper, user, profile, schoolData);
 
-    if (usernameIsTaken) {
-      throw new UserAlreadyExists(user.username.value);
+    if (errorWrapper.hasErrors()) {
+      return errorWrapper;
+    }
+
+    this.userRepository.save(user);
+    this.profileRepository.save(profile, schoolData);
+  };
+
+  private validate = async (
+    errorWrapper: ErrorWrapper,
+    user: User,
+    profile: Profile,
+    schoolData: SchoolData
+  ): Promise<void> => {
+    if (await this.userRepository.exists(user)) {
+      errorWrapper.addError(RegisterError.UserAlreadyExists);
     }
 
     if (await this.profileRepository.keyExists("email", profile.email.value)) {
-      throw new EmailAlreadyExists(profile.email.value);
+      errorWrapper.addError(RegisterError.EmailAlreadyExists);
     }
 
     if (await this.profileRepository.keyExists("phone", profile.phone.value)) {
-      throw new PhoneAlreadyExists(profile.phone.value);
+      errorWrapper.addError(RegisterError.PhoneAlreadyExists);
     }
 
     if (
       await this.profileRepository.keyExists("schoolId", schoolData.id.value)
     ) {
-      throw new SchoolIdAlreadyExists(schoolData.id.value);
+      errorWrapper.addError(RegisterError.SchoolIdAlreadyExists);
     }
-
-    this.userRepository.save(user);
-    this.profileRepository.save(profile, schoolData);
   };
 }

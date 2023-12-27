@@ -1,4 +1,4 @@
-import { InvalidArgumentError } from "../../../shared/domain/value-objects/InvalidArgumentError";
+import { InvalidArgumentError } from "../../../shared/domain/errors/InvalidArgumentError";
 
 export class InvalidFullname extends InvalidArgumentError {
   constructor() {

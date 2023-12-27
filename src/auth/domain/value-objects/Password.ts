@@ -1,5 +1,5 @@
 import { ValueObject } from "../../../shared/domain/value-objects/ValueObject";
-import { InvalidPassword } from "../exceptions/InvalidPassword";
+import { InvalidPassword } from "../errors/InvalidPassword";
 import bcrypt from "bcrypt";
 
 export class Password extends ValueObject<string> {

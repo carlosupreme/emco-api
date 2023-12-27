@@ -5,10 +5,6 @@ import { User } from "../domain/User";
 import { Username } from "../domain/value-objects/Username";
 import { Password } from "../domain/value-objects/Password";
 import { UserId } from "../domain/value-objects/UserId";
-import { InvalidPassword } from "../domain/exceptions/InvalidPassword";
-import { InvalidUsername } from "../domain/exceptions/InvalidUsername";
-import { UserAlreadyExists } from "../domain/exceptions/UserAlreadyExists";
-import { AuthenticateError } from "../domain/exceptions/AuthenticateError";
 import { Profile } from "../../profile/domain/Profile";
 import { ProfileId } from "../../profile/domain/value-objects/ProfileId";
 import { SchoolId } from "../../profile/domain/value-objects/SchoolId";
@@ -21,90 +17,104 @@ import { SchoolData } from "../../profile/domain/SchoolData";
 import { Major } from "../../profile/domain/value-objects/Major";
 import { SocialMedia } from "../../profile/domain/value-objects/SocialMedia";
 import { Semester } from "../../profile/domain/value-objects/Semester";
+import { ApiController } from "../../shared/infrastructure/ApiController";
+import { ErrorWrapper } from "../../shared/domain/errors/ErrorWrapper";
 
-export class AuthController {
-  private authenticateUser: AuthenticateUser;
+export class AuthController extends ApiController {
+  private loginUser: AuthenticateUser;
   private registerUser: RegisterUser;
 
-  constructor(authenticateUser: AuthenticateUser, registerUser: RegisterUser) {
-    this.authenticateUser = authenticateUser;
+  constructor(loginUser: AuthenticateUser, registerUser: RegisterUser) {
+    super();
+    this.loginUser = loginUser;
     this.registerUser = registerUser;
   }
 
-  login = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { username, password } = req.body;
-      const loginResponse = await this.authenticateUser.login(
-        username,
-        password
-      );
+  login = async (req: Request, res: Response) => {
+    const { username, password } = req.body;
+    const loginResponseOrError = await this.loginUser.login(username, password);
 
-      res.json({
-        message: "Logged in successfully",
-        user: loginResponse.user.toPrimitives(),
-        token: loginResponse.token,
-      });
-    } catch (error) {
-      if (error instanceof AuthenticateError)
-        res.status(400).json({ message: error.message });
-      else {
-        res.status(500).json({ error: true, message: (<Error>error).message });
-      }
+    if (loginResponseOrError instanceof ErrorWrapper) {
+      return this.problem(loginResponseOrError, res);
     }
+
+    return res.json({
+      message: "Logged in successfully",
+      user: loginResponseOrError.user.toPrimitives(),
+      token: loginResponseOrError.token,
+    });
   };
 
-  register = async (req: Request, res: Response): Promise<void> => {
+  register = async (req: Request, res: Response) => {
     const { username, password } = req.body;
     const { fullname, email, phone, photo, socialMedia } = req.body;
     const { schoolId, major, semester } = req.body;
 
-    try {
-      const userId = UserId.generate();
-      const user = new User(
-        userId,
-        new Username(username),
-        Password.hash(password)
-      );
+    // TODO: Handle errors thrown by value objects
 
-      const profile = new Profile(
-        ProfileId.generate(),
-        userId,
-        new Fullname(fullname),
-        new Email(email),
-        new Phone(phone),
-        new Photo(photo),
-        new SocialMedia(socialMedia),
-        new RegisteredAt(new Date())
-      );
+    const user = this.createUser(username, password);
 
-      const schoolData = new SchoolData(
-        new SchoolId(schoolId),
-        new Major(major),
-        new Semester(semester)
-      );
+    const profile = this.createProfile(
+      user,
+      fullname,
+      email,
+      phone,
+      photo,
+      socialMedia
+    );
 
-      await this.registerUser.register(user, profile, schoolData);
+    const schoolData = this.createSchoolData(schoolId, major, semester);
 
-      res.json({
-        message: "You have been successfully registered. Please log in",
-        user: {
-          user: user.toPrimitives(),
-          profile: profile.toPrimitives(),
-          schoolData: schoolData.toPrimitives(),
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof InvalidPassword ||
-        error instanceof InvalidUsername ||
-        error instanceof UserAlreadyExists
-      ) {
-        res.status(400).json({ error: true, message: error.message });
-      } else {
-        console.log(error);
-        
-        res.status(500).json({ error: true, message: (<Error>error).message });
-      }
+    const errors = await this.registerUser.register(user, profile, schoolData);
+
+    if (errors instanceof ErrorWrapper) {
+      return this.problem(errors, res);
     }
+
+    return res.json({
+      message: "You have been successfully registered. Please log in",
+      user: {
+        user: user.toPrimitives(),
+        profile: profile.toPrimitives(),
+        schoolData: schoolData.toPrimitives(),
+      },
+    });
   };
+
+  private createSchoolData(schoolId: any, major: any, semester: any) {
+    return new SchoolData(
+      new SchoolId(schoolId),
+      new Major(major),
+      new Semester(semester)
+    );
+  }
+
+  private createProfile(
+    user: User,
+    fullname: any,
+    email: any,
+    phone: any,
+    photo: any,
+    socialMedia: any
+  ) {
+    return new Profile(
+      ProfileId.generate(),
+      user.id,
+      new Fullname(fullname),
+      new Email(email),
+      new Phone(phone),
+      new Photo(photo),
+      new SocialMedia(socialMedia),
+      new RegisteredAt(new Date())
+    );
+  }
+
+  private createUser(username: any, password: any) {
+    const userId = UserId.generate();
+    const usernameVO = new Username(username);
+    const passwordVO = Password.hash(password);
+
+    const user = new User(userId, usernameVO, passwordVO);
+    return user;
+  }
 }

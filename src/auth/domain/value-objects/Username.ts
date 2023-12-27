@@ -1,5 +1,5 @@
 import { ValueObject } from "../../../shared/domain/value-objects/ValueObject";
-import { InvalidUsername } from "../exceptions/InvalidUsername";
+import { InvalidUsername } from "../errors/InvalidUsername";
 
 export class Username extends ValueObject<string> {
   constructor(value: string) {
