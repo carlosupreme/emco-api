@@ -5,7 +5,7 @@ export class DomainError {
   readonly description: string;
   readonly type: ErrorType;
 
-  constructor(code: string, description: string, type: ErrorType) {
+  private constructor(code: string, description: string, type: ErrorType) {
     this.code = code;
     this.description = description;
     this.type = type;

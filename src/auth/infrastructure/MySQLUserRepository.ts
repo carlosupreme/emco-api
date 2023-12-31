@@ -29,15 +29,6 @@ export class MySQLUserRepository implements UserRepository {
     return User.fromPrimitives(rows[0]);
   };
 
-  exists = async (user: User): Promise<boolean> => {
-    const [rows, _fields] = await this.connection.pool.query<UserPrimitive[]>(
-      "SELECT * FROM users WHERE username = ? LIMIT 1",
-      [user.username.value]
-    );
-
-    return rows.length > 0;
-  };
-
   save = async (user: User): Promise<void> => {
     await this.connection.pool.query(
       "INSERT INTO users(id, username, password) VALUES(?, ?, ?)",

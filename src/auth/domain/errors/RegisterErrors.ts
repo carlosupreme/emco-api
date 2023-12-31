@@ -1,6 +1,6 @@
 import { DomainError } from "../../../shared/domain/errors/DomainError";
 
-export class RegisterError {
+export class RegisterErrors {
   static InvalidPassword: DomainError = DomainError.Validation(
     "Register.InvalidPassword",
     "Invalid password"

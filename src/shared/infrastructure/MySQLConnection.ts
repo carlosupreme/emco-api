@@ -6,7 +6,7 @@ export class MySQLConnection {
   readonly pool: Pool;
 
   private constructor() {
-    this.pool = createPool(credentials());
+    this.pool = createPool(credentials());    
   }
 
   static getInstance(): MySQLConnection {

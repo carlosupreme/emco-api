@@ -1,42 +1,37 @@
 import { Response } from "express";
-import { ProblemDetails } from "./ProblemDetails";
 import { ErrorWrapper } from "../domain/errors/ErrorWrapper";
-import { ProblemDetailsDefaults } from "./ProblemDetailsDefaults";
+import PDBuilder from "problem-details-http";
+import { ErrorType } from "../domain/errors/ErrorType";
 
 export class ApiController {
   problem = (errorWrapper: ErrorWrapper, response: Response) => {
-    let httpStatusCode: number = 500;
-    let details: string = "";
+    const { statusCode, detail, title } = this.getSpecificError(errorWrapper);
 
-    ({ httpStatusCode, details } = this.getSpecificError(errorWrapper, httpStatusCode, details));
-
-    const typeAndTitle = ProblemDetailsDefaults.getTypeAndTitle(httpStatusCode);
-    const problemDetails = new ProblemDetails(
-      typeAndTitle.type,
-      httpStatusCode,
-      typeAndTitle.title,
-      details
-    );
-
-    problemDetails.addProperty("errors", errorWrapper.errors);
+    const problemDetails = PDBuilder.fromDetail(detail)
+      .status(statusCode)
+      .title(title)
+      .extensions({ errors: errorWrapper.errors })
+      .build();
 
     return response
       .setHeader("Content-Type", "application/problem+json")
-      .status(httpStatusCode)
-      .json(problemDetails.getJson());
+      .status(statusCode)
+      .json(problemDetails);
   };
 
-  private getSpecificError(errorWrapper: ErrorWrapper, httpStatusCode: number, details: string) {
-    if (errorWrapper.domain === "Register") {
-      httpStatusCode = 400;
-      details =
-        "The registration data already exists in our records. Try another values.";
-    } else if (errorWrapper.domain === "Auth") {
-      httpStatusCode = 400;
-      details = "Invalid credentials. Try another values.";
-    } else {
-      details = "An unexpected error has occurred. Please try again later.";
-    }
-    return { httpStatusCode, details };
+  private getSpecificError(errorWrapper: ErrorWrapper) {
+    const title = errorWrapper.domain;
+    const detail = errorWrapper.first().description;
+    const httpStatusCodes = {
+      [ErrorType.Conflict]: 409,
+      [ErrorType.Validation]: 400,
+      [ErrorType.NotFound]: 404,
+      [ErrorType.Failure]: 500,
+      [ErrorType.Unauthorized]: 401,
+      [ErrorType.Unexpected]: 500,
+    };
+    const statusCode = httpStatusCodes[errorWrapper.first().type];
+
+    return { statusCode, detail, title };
   }
 }

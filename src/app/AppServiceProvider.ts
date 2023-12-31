@@ -1,4 +1,4 @@
-import { AuthenticateUser } from "../auth/application/AuthenticateUser";
+import { LoginUser } from "../auth/application/LoginUser";
 import { RegisterUser } from "../auth/application/RegisterUser";
 import { JWTProvider } from "../auth/domain/JWTProvider";
 import { UserRepository } from "../auth/domain/UserRepository";
@@ -6,13 +6,10 @@ import { AuthController } from "../auth/infrastructure/AuthController";
 import { JsonWebTokenProvider } from "../auth/infrastructure/JsonWebTokenProvider";
 import { MySQLUserRepository } from "../auth/infrastructure/MySQLUserRepository";
 import SessionValidator from "../auth/infrastructure/Session";
-import { ProfileRepository } from "../profile/domain/ProfileRepository";
-import { MySQLProfileRepository } from "../profile/infrastructure/MySQLProfileRepository";
 import { MySQLConnection } from "../shared/infrastructure/MySQLConnection";
 
 export class AppServiceProvider {
   private static _userRepository: UserRepository;
-  private static _profileRepository: ProfileRepository;
   private static _authController: AuthController;
   private static _jwtProvider: JWTProvider;
   private static _sessionValidator: SessionValidator;
@@ -25,16 +22,6 @@ export class AppServiceProvider {
     }
 
     return AppServiceProvider._userRepository;
-  }
-
-  private static profileRepository(): ProfileRepository {
-    if (null == AppServiceProvider._profileRepository) {
-      AppServiceProvider._profileRepository = new MySQLProfileRepository(
-        MySQLConnection.getInstance()
-      );
-    }
-
-    return AppServiceProvider._profileRepository;
   }
 
   private static jwtProvider(): JWTProvider {
@@ -58,13 +45,13 @@ export class AppServiceProvider {
   static authController(): AuthController {
     if (null == AppServiceProvider._authController) {
       AppServiceProvider._authController = new AuthController(
-        new AuthenticateUser(
+        new LoginUser(
           AppServiceProvider.userRepository(),
           AppServiceProvider.jwtProvider()
         ),
         new RegisterUser(
           AppServiceProvider.userRepository(),
-          AppServiceProvider.profileRepository()
+          AppServiceProvider.jwtProvider()
         )
       );
     }

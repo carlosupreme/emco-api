@@ -1,5 +1,5 @@
 import express from "express";
-import { AppServiceProvider } from "../../../app/AppServiceProvider";
+import { AppServiceProvider } from "../AppServiceProvider";
 
 const authRoutes = express.Router();
 

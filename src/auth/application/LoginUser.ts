@@ -1,10 +1,10 @@
 import { ErrorWrapper } from "../../shared/domain/errors/ErrorWrapper";
 import { JWTProvider } from "../domain/JWTProvider";
-import { LoginResponse } from "../domain/LoginResponse";
 import { UserRepository } from "../domain/UserRepository";
-import { AuthenticateError } from "../domain/errors/AuthenticateError";
+import { AuthErrors } from "../domain/errors/AuthErrors";
+import { AuthenticationResponse } from "./AuthenticationResponse";
 
-export class AuthenticateUser {
+export class LoginUser {
   private userRepository: UserRepository;
   private jsonWebTokenProvider: JWTProvider;
 
@@ -16,15 +16,15 @@ export class AuthenticateUser {
   login = async (
     username: string,
     password: string
-  ): Promise<LoginResponse | ErrorWrapper> => {
+  ): Promise<AuthenticationResponse | ErrorWrapper> => {
     const user = await this.userRepository.findByUsername(username);
 
     if (user == undefined || !user.passwordMatches(password)) {
-      return new ErrorWrapper("Auth", AuthenticateError.InvalidCredentials);
+      return ErrorWrapper.from(AuthErrors.InvalidCredentials);
     }
 
     const token = this.jsonWebTokenProvider.generate({ userId: user.id.value });
 
-    return new LoginResponse(user, token);
+    return new AuthenticationResponse(user.username.value, token);
   };
 }

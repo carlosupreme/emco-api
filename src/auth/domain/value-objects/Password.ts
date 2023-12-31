@@ -8,7 +8,7 @@ export class Password extends ValueObject<string> {
   }
 
   static hash(plainTextPassword: string): Password {
-    Password.validate(plainTextPassword);
+    //Password.validate(plainTextPassword);
     return new Password(
       bcrypt.hashSync(plainTextPassword, bcrypt.genSaltSync())
     );
