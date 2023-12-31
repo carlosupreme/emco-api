@@ -1,16 +1,16 @@
 import { Response } from "express";
-import { ErrorWrapper } from "../domain/errors/ErrorWrapper";
 import PDBuilder from "problem-details-http";
 import { ErrorType } from "../domain/errors/ErrorType";
+import { DomainError } from "../domain/errors/DomainError";
 
 export class ApiController {
-  problem = (errorWrapper: ErrorWrapper, response: Response) => {
-    const { statusCode, detail, title } = this.getSpecificError(errorWrapper);
+  problem = (errors: DomainError[], response: Response) => {
+    const { statusCode, detail, title } = this.getSpecificError(errors);
 
     const problemDetails = PDBuilder.fromDetail(detail)
       .status(statusCode)
       .title(title)
-      .extensions({ errors: errorWrapper.errors })
+      .extensions({ errors })
       .build();
 
     return response
@@ -19,9 +19,9 @@ export class ApiController {
       .json(problemDetails);
   };
 
-  private getSpecificError(errorWrapper: ErrorWrapper) {
-    const title = errorWrapper.domain;
-    const detail = errorWrapper.first().description;
+  private getSpecificError(errors: DomainError[]) {
+    const title = errors[0].description;
+    const detail = errors[0].description;
     const httpStatusCodes = {
       [ErrorType.Conflict]: 409,
       [ErrorType.Validation]: 400,
@@ -30,7 +30,7 @@ export class ApiController {
       [ErrorType.Unauthorized]: 401,
       [ErrorType.Unexpected]: 500,
     };
-    const statusCode = httpStatusCodes[errorWrapper.first().type];
+    const statusCode = httpStatusCodes[errors[0].type];
 
     return { statusCode, detail, title };
   }

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import { LoginUser } from "../application/LoginUser";
-import { RegisterUser } from "../application/RegisterUser";
+import { LoginUser } from "../application/queries/login/LoginUser";
+import { RegisterUser } from "../application/commands/register/RegisterUser";
 import { ApiController } from "../../shared/infrastructure/ApiController";
-import { ErrorWrapper } from "../../shared/domain/errors/ErrorWrapper";
+import { ErrorOr } from "../../shared/domain/errors/ErrorOr";
+import { AuthenticationResponse } from "../application/AuthenticationResponse";
 
 export class AuthController extends ApiController {
   private loginUser: LoginUser;
@@ -19,13 +20,11 @@ export class AuthController extends ApiController {
     if (!username || !password)
       return res.send("Please provide username and password");
 
-    const registerResult = await this.registerUser.register(
-      username,
-      password
-    );
+    const registerResult: ErrorOr<AuthenticationResponse> =
+      await this.registerUser.register(username, password);
 
-    if (registerResult instanceof ErrorWrapper) {
-      return this.problem(registerResult, res);
+    if (registerResult.isError()) {
+      return this.problem(registerResult.errors!, res);
     }
 
     return res.json({
@@ -39,15 +38,16 @@ export class AuthController extends ApiController {
     if (!username || !password)
       return res.send("Please provide username and password");
 
-    const responseOrError = await this.loginUser.login(username, password);
+    const loginResult: ErrorOr<AuthenticationResponse> =
+      await this.loginUser.login(username, password);
 
-    if (responseOrError instanceof ErrorWrapper) {
-      return this.problem(responseOrError, res);
+    if (loginResult.isError()) {
+      return this.problem(loginResult.errors!, res);
     }
 
     return res.json({
       message: "Logged in successfully",
-      ...responseOrError,
+      ...loginResult,
     });
   };
 }

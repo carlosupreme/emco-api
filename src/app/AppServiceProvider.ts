@@ -1,5 +1,5 @@
-import { LoginUser } from "../auth/application/LoginUser";
-import { RegisterUser } from "../auth/application/RegisterUser";
+import { LoginUser } from "../auth/application/queries/login/LoginUser";
+import { RegisterUser } from "../auth/application/commands/register/RegisterUser";
 import { JWTProvider } from "../auth/domain/JWTProvider";
 import { UserRepository } from "../auth/domain/UserRepository";
 import { AuthController } from "../auth/infrastructure/AuthController";
