@@ -3,15 +3,11 @@ import { UserId } from "./value-objects/UserId";
 import { Username } from "./value-objects/Username";
 
 export class User {
-  readonly id: UserId;
-  readonly username: Username;
-  readonly password: Password;
-
-  constructor(id: UserId, username: Username, password: Password) {
-    this.id = id;
-    this.username = username;
-    this.password = password;
-  }
+  constructor(
+    readonly id: UserId,
+    readonly username: Username,
+    readonly password: Password
+  ) {}
 
   static fromPrimitives(props: any): User {
     return new User(

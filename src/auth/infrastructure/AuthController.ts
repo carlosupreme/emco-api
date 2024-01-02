@@ -7,7 +7,6 @@ import { RegisterCommand } from "../application/commands/register/RegisterComman
 import { LoginQuery } from "../application/queries/login/LoginQuery";
 import {
   controller,
-  httpGet,
   httpPost,
   request,
   response,
@@ -15,18 +14,8 @@ import {
 
 @controller("/auth")
 export class AuthController extends ApiController {
-  private mediator: Mediator;
-
-  constructor(mediator: Mediator) {
+  constructor(private mediator: Mediator) {
     super();
-    this.mediator = mediator;
-  }
-
-  @httpGet("/test")
-  async test(@request() _req: Request, @response() res: Response) {
-    return res.json({
-      message: "You are authenticated",
-    });
   }
 
   @httpPost("/register")
