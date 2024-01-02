@@ -1,9 +1,11 @@
-import { JWTProvider } from "../domain/JWTProvider";
+import { IJWTProvider } from "../domain/JWTProvider";
 import { JWT } from "../domain/value-objects/JWT";
 import jwt from "jsonwebtoken";
 import JWTSettings from "./config/JWTSettings";
+import { injectable } from "inversify";
 
-export class JsonWebTokenProvider implements JWTProvider {
+@injectable()  
+export class JsonWebTokenProvider implements IJWTProvider {
   generate(payload: object): string {
     try {
       return jwt.sign(payload, JWTSettings.SECRET_KEY, {

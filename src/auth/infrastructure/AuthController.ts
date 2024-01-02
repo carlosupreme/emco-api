@@ -1,27 +1,45 @@
 import { Request, Response } from "express";
-import { LoginUser } from "../application/queries/login/LoginUser";
-import { RegisterUser } from "../application/commands/register/RegisterUser";
 import { ApiController } from "../../shared/infrastructure/ApiController";
 import { ErrorOr } from "../../shared/domain/errors/ErrorOr";
 import { AuthenticationResponse } from "../application/AuthenticationResponse";
+import { Mediator } from "mediatr-ts";
+import { RegisterCommand } from "../application/commands/register/RegisterCommand";
+import { LoginQuery } from "../application/queries/login/LoginQuery";
+import {
+  controller,
+  httpGet,
+  httpPost,
+  request,
+  response,
+} from "inversify-express-utils";
 
+@controller("/auth")
 export class AuthController extends ApiController {
-  private loginUser: LoginUser;
-  private registerUser: RegisterUser;
+  private mediator: Mediator;
 
-  constructor(loginUser: LoginUser, registerUser: RegisterUser) {
+  constructor(mediator: Mediator) {
     super();
-    this.loginUser = loginUser;
-    this.registerUser = registerUser;
+    this.mediator = mediator;
   }
 
-  register = async (req: Request, res: Response): Promise<Response> => {
+  @httpGet("/test")
+  async test(@request() _req: Request, @response() res: Response) {
+    return res.json({
+      message: "You are authenticated",
+    });
+  }
+
+  @httpPost("/register")
+  async register(@request() req: Request, @response() res: Response) {
     const { username, password } = req.body;
     if (!username || !password)
       return res.send("Please provide username and password");
 
-    const registerResult: ErrorOr<AuthenticationResponse> =
-      await this.registerUser.register(username, password);
+    const command = new RegisterCommand(username, password);
+
+    const registerResult = await this.mediator.send<
+      ErrorOr<AuthenticationResponse>
+    >(command);
 
     if (registerResult.isError()) {
       return this.problem(registerResult.errors!, res);
@@ -31,15 +49,19 @@ export class AuthController extends ApiController {
       message: "You have been successfully registered.",
       ...registerResult,
     });
-  };
+  }
 
-  login = async (req: Request, res: Response) => {
+  @httpPost("/login")
+  async login(@request() req: Request, @response() res: Response) {
     const { username, password } = req.body;
     if (!username || !password)
       return res.send("Please provide username and password");
 
-    const loginResult: ErrorOr<AuthenticationResponse> =
-      await this.loginUser.login(username, password);
+    const loginQuery = new LoginQuery(username, password);
+
+    const loginResult = await this.mediator.send<
+      ErrorOr<AuthenticationResponse>
+    >(loginQuery);
 
     if (loginResult.isError()) {
       return this.problem(loginResult.errors!, res);
@@ -49,5 +71,5 @@ export class AuthController extends ApiController {
       message: "Logged in successfully",
       ...loginResult,
     });
-  };
+  }
 }

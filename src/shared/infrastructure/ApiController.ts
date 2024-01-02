@@ -2,7 +2,9 @@ import { Response } from "express";
 import PDBuilder from "problem-details-http";
 import { ErrorType } from "../domain/errors/ErrorType";
 import { DomainError } from "../domain/errors/DomainError";
+import { injectable } from "inversify";
 
+@injectable() 
 export class ApiController {
   problem = (errors: DomainError[], response: Response) => {
     const { statusCode, detail, title } = this.getSpecificError(errors);
