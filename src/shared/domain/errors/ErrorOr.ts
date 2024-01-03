@@ -1,6 +1,7 @@
 import { DomainError } from "./DomainError";
+import { IErrorOr } from "./IErrorOr";
 
-export class ErrorOr<T> {
+export class ErrorOr<T> implements IErrorOr<T> {
   readonly value?: T;
   readonly errors?: DomainError[];
 
@@ -13,7 +14,7 @@ export class ErrorOr<T> {
     return new ErrorOr<T>(value);
   }
 
-  static failure<T>(...errors: DomainError[]): ErrorOr<T> {
+  static failure<T>(...errors: DomainError[]): IErrorOr<T> {
     return new ErrorOr<T>(undefined, ...errors);
   }
 

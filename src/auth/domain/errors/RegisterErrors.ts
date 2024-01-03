@@ -2,32 +2,32 @@ import { DomainError } from "../../../shared/domain/errors/DomainError";
 
 export class RegisterErrors {
   static InvalidPassword: DomainError = DomainError.Validation(
-    "Register.InvalidPassword",
-    "Invalid password"
+    "InvalidPassword",
+    "Must be at least 8 characters. Must contain at least 1 uppercase letter, 1 lowercase letter, and 1 number. Can contain special characters"
   );
 
   static InvalidUsername: DomainError = DomainError.Validation(
-    "Register.InvalidUsername",
-    "Invalid username"
+    "InvalidUsername",
+    "The username must be between 3 and 20 characters long and can only contain letters and numbers"
   );
 
   static UserAlreadyExists: DomainError = DomainError.Conflict(
-    "Register.UserAlreadyExists",
+    "UserAlreadyExists",
     "User already exists"
   );
 
   static EmailAlreadyExists: DomainError = DomainError.Conflict(
-    "Register.EmailAlreadyExists",
+    "EmailAlreadyExists",
     "Email already exists"
   );
 
   static PhoneAlreadyExists: DomainError = DomainError.Conflict(
-    "Register.PhoneAlreadyExists",
+    "PhoneAlreadyExists",
     "Phone already exists"
   );
 
   static SchoolIdAlreadyExists: DomainError = DomainError.Conflict(
-    "Register.SchoolIdAlreadyExists",
+    "SchoolIdAlreadyExists",
     "School ID already exists"
   );
 }

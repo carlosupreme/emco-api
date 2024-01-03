@@ -1,39 +1,35 @@
 import { Response } from "express";
 import PDBuilder from "problem-details-http";
-import { ErrorType } from "../domain/errors/ErrorType";
 import { DomainError } from "../domain/errors/DomainError";
-import { injectable } from "inversify";
+import { AsyncValidator } from "fluentvalidation-ts";
+import {
+  DomainErrorsToJson,
+  JsonToValidationErrors,
+} from "../../app/mappings/mapper";
 
-@injectable() 
 export class ApiController {
-  problem = (errors: DomainError[], response: Response) => {
-    const { statusCode, detail, title } = this.getSpecificError(errors);
-
-    const problemDetails = PDBuilder.fromDetail(detail)
-      .status(statusCode)
-      .title(title)
-      .extensions({ errors })
+  problem(errors: DomainError[], response: Response): Response {
+    const responseErrors = DomainErrorsToJson(errors);
+    const problemDetails = PDBuilder.fromDetail(
+      "There is an error in your request "
+    )
+      .extensions({ errors: responseErrors })
       .build();
 
     return response
       .setHeader("Content-Type", "application/problem+json")
-      .status(statusCode)
-      .json(problemDetails);
-  };
+      .status(400)
+      .send(problemDetails.toString());
+  }
 
-  private getSpecificError(errors: DomainError[]) {
-    const title = errors[0].description;
-    const detail = errors[0].description;
-    const httpStatusCodes = {
-      [ErrorType.Conflict]: 409,
-      [ErrorType.Validation]: 400,
-      [ErrorType.NotFound]: 404,
-      [ErrorType.Failure]: 500,
-      [ErrorType.Unauthorized]: 401,
-      [ErrorType.Unexpected]: 500,
-    };
-    const statusCode = httpStatusCodes[errors[0].type];
+  async validate<T>(
+    validator: AsyncValidator<T>,
+    command: T,
+    res: Response
+  ): Promise<Response | void> {
+    const errors = await validator.validateAsync(command);
 
-    return { statusCode, detail, title };
+    if (Object.keys(errors).length > 0)
+      return this.problem(JsonToValidationErrors(errors), res);
   }
 }

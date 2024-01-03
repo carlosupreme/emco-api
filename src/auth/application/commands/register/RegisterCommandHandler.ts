@@ -18,7 +18,8 @@ export class RegisterCommandHandler
   implements IRequestHandler<RegisterCommand, ErrorOr<AuthenticationResponse>>
 {
   constructor(
-    @inject(EMCO_INTERFACES.UserRepository) private userRepository: UserRepository,
+    @inject(EMCO_INTERFACES.UserRepository)
+    private userRepository: UserRepository,
     @inject(EMCO_INTERFACES.IJWTProvider) private JWTProvider: IJWTProvider
   ) {}
 
@@ -29,11 +30,11 @@ export class RegisterCommandHandler
       return ErrorOr.failure(RegisterErrors.UserAlreadyExists);
     }
 
-    const user = new User(
+   const user = new User(
       UserId.generate(),
       new Username(command.username),
       Password.hash(command.password)
-    );
+    ); 
 
     this.userRepository.save(user);
 

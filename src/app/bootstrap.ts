@@ -9,7 +9,10 @@ import { IJWTProvider } from "../auth/domain/JWTProvider";
 import { EMCO_INTERFACES } from "./EMCO_INTERFACES";
 import SessionValidator from "../auth/infrastructure/Session";
 
-const container = new Container();
+const container = new Container({
+  skipBaseClassChecks: true,
+  autoBindInjectable: true,
+});
 
 class Resolver implements IResolver {
   resolve<T>(name: string): T {
@@ -33,7 +36,7 @@ mediatorSettings.resolver = new Resolver();
 
 export default function (): Container {
   container.bind(Mediator).toConstantValue(new Mediator());
-  container.bind(MySQLConnection).toSelf();
+  container.bind(MySQLConnection).toConstantValue(new MySQLConnection());
 
   container
     .bind<UserRepository>(EMCO_INTERFACES.UserRepository)
@@ -43,7 +46,7 @@ export default function (): Container {
     .bind<IJWTProvider>(EMCO_INTERFACES.IJWTProvider)
     .to(JsonWebTokenProvider);
 
-  container.bind(SessionValidator).toSelf();
+  container.bind(SessionValidator).toSelf().inSingletonScope();
 
   return container;
 }
