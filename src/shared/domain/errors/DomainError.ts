@@ -1,15 +1,11 @@
 import { ErrorType } from "./ErrorType";
 
 export class DomainError {
-  readonly code: string;
-  readonly description: string;
-  readonly type: ErrorType;
-
-  constructor(code: string, description: string, type: ErrorType) {
-    this.code = code;
-    this.description = description;
-    this.type = type;
-  }
+  constructor(
+    public readonly code: string,
+    public readonly description: string,
+    public readonly type: ErrorType
+  ) {}
 
   static Conflict(code: string, description: string): DomainError {
     return new DomainError(code, description, ErrorType.Conflict);

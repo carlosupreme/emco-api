@@ -1,19 +1,12 @@
 import { createPool, Pool } from "mysql2/promise";
 import credentials from "./config/MySQLCredentials";
+import { injectable } from "inversify";
 
+@injectable()
 export class MySQLConnection {
-  private static instance: MySQLConnection;
   readonly pool: Pool;
 
-  private constructor() {
+  constructor() {
     this.pool = createPool(credentials());
-  }
-
-  static getInstance(): MySQLConnection {
-    if (!MySQLConnection.instance) {
-      MySQLConnection.instance = new MySQLConnection();
-    }
-
-    return MySQLConnection.instance;
   }
 }

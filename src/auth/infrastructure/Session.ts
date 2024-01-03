@@ -1,13 +1,14 @@
 import { NextFunction, Response } from "express";
 import { SessionRequest } from "./SessionRequest";
-import { JWTProvider } from "../domain/JWTProvider";
+import { IJWTProvider } from "../domain/JWTProvider";
+import { inject, injectable } from "inversify";
+import { EMCO_INTERFACES } from "../../app/EMCO_INTERFACES";
 
+@injectable()
 export class SessionValidator {
-  private readonly jwtProvider: JWTProvider;
-
-  constructor(jwtProvider: JWTProvider) {
-    this.jwtProvider = jwtProvider;
-  }
+  constructor(
+    @inject(EMCO_INTERFACES.IJWTProvider) private readonly jwtProvider: IJWTProvider
+  ) {}
 
   middleware = async (
     req: SessionRequest,

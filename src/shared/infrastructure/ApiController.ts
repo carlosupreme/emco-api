@@ -1,42 +1,35 @@
 import { Response } from "express";
-import { ProblemDetails } from "./ProblemDetails";
-import { ErrorWrapper } from "../domain/errors/ErrorWrapper";
-import { ProblemDetailsDefaults } from "./ProblemDetailsDefaults";
+import PDBuilder from "problem-details-http";
+import { DomainError } from "../domain/errors/DomainError";
+import { AsyncValidator } from "fluentvalidation-ts";
+import {
+  DomainErrorsToJson,
+  JsonToValidationErrors,
+} from "../../app/mappings/mapper";
 
 export class ApiController {
-  problem = (errorWrapper: ErrorWrapper, response: Response) => {
-    let httpStatusCode: number = 500;
-    let details: string = "";
-
-    ({ httpStatusCode, details } = this.getSpecificError(errorWrapper, httpStatusCode, details));
-
-    const typeAndTitle = ProblemDetailsDefaults.getTypeAndTitle(httpStatusCode);
-    const problemDetails = new ProblemDetails(
-      typeAndTitle.type,
-      httpStatusCode,
-      typeAndTitle.title,
-      details
-    );
-
-    problemDetails.addProperty("errors", errorWrapper.errors);
+  problem(errors: DomainError[], response: Response): Response {
+    const responseErrors = DomainErrorsToJson(errors);
+    const problemDetails = PDBuilder.fromDetail(
+      "There is an error in your request "
+    )
+      .extensions({ errors: responseErrors })
+      .build();
 
     return response
       .setHeader("Content-Type", "application/problem+json")
-      .status(httpStatusCode)
-      .json(problemDetails.getJson());
-  };
+      .status(400)
+      .send(problemDetails.toString());
+  }
 
-  private getSpecificError(errorWrapper: ErrorWrapper, httpStatusCode: number, details: string) {
-    if (errorWrapper.domain === "Register") {
-      httpStatusCode = 400;
-      details =
-        "The registration data already exists in our records. Try another values.";
-    } else if (errorWrapper.domain === "Auth") {
-      httpStatusCode = 400;
-      details = "Invalid credentials. Try another values.";
-    } else {
-      details = "An unexpected error has occurred. Please try again later.";
-    }
-    return { httpStatusCode, details };
+  async validate<T>(
+    validator: AsyncValidator<T>,
+    command: T,
+    res: Response
+  ): Promise<Response | void> {
+    const errors = await validator.validateAsync(command);
+
+    if (Object.keys(errors).length > 0)
+      return this.problem(JsonToValidationErrors(errors), res);
   }
 }
