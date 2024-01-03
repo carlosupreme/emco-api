@@ -11,7 +11,7 @@ export class ApiController {
   problem(errors: DomainError[], response: Response): Response {
     const responseErrors = DomainErrorsToJson(errors);
     const problemDetails = PDBuilder.fromDetail(
-      "There is an error in your request "
+      "There is an error in your request."
     )
       .extensions({ errors: responseErrors })
       .build();

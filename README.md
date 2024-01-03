@@ -23,80 +23,89 @@ If you have any problems or requests, please contact our API team.
 #### Register
 
 - Method: `POST`
-- Path: `/register`
-- Description: Register a user with all required information
+- Path: `/auth/register`
+- Description: Register a user with basic information.
 
-- Request Body:
+`username`:
+
+- Required
+- 3-20 characters
+
+`password`:
+
+- Required
+- At least 8 characters
+- At least 1 letter uppercase, lowercase, digit and a special char
+
+##### Register examples
+
 ```json
 {
-  "username": "developer1",
-  "password": "GreatPassword_0000",
-  "fullname": "Emco Developer 1",
-  "email": "developer@emco.com",
-  "phone": "9876543210",
-  "photo": "https://ui-avatars.com/api/?name=Emco+Developer",
-  "socialMedia": {
-    "instagram": "emco"
-  },
-  "schoolId": "123456789",
-  "major": "Computer Science",
-  "semester": 5
+  "username": "",
+  "password": "123"
 }
 ```
-- Response:
-```js
-200 OK
-```
+
+Response:
+
 ```json
+// 400 Bad Request ⚠️
 {
-  "message": "You have been successfully registered. Please log in",
-  "user": {
-    "user": {
-      "id": "6ca3b7d7-4315-4865-953b-118c83a134bc",
-      "username": "developer1",
-      "password": "$2b$10$8tKo04cRR9...pH7q"
-    },
-    "profile": {
-      "id": "3dc4331a-2b23-4c78-aaca-39c86d618216",
-      "userId": "6ca3b7d7-4315-4865-953b-118c83a134bc",
-      "fullname": "Emco Developer 1",
-      "email": "developer@emco.com",
-      "phone": "9876543210",
-      "photo": "https://ui-avatars.com/api/?name=Emco+Developer",
-      "socialMedia": {
-        "instagram": "emco"
-      },
-      "registeredAt": "2023-12-27T02:40:54.214Z"
-    },
-    "schoolData": {
-      "id": "123456789",
-      "major": "Computer Science",
-      "semester": 5
-    }
+  "type": "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
+  "status": 400,
+  "title": "Bad Request",
+  "detail": "There is an error in your request.",
+  "errors": {
+    "username": "Username is required",
+    "password": "Password must be at least 8 characters"
   }
 }
+```
 
+✅ Good Request:
+
+```json
+{
+  "username": "username",
+  "password": "Valid-password123"
+}
+```
+
+Response:
+
+```json
+// 200 OK 🆗
+{
+  "message": "You have been successfully registered.",
+  "username": "username",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....2hPjqHbvsNXq5SMVw"
+}
 ```
 
 #### Login
 
 - Method: `POST`
-- Path: `/login`
-- Description: This endpoint is for authenticating the user, it receives the username and password in plain text. 
-If the credentials are correct the access token is answered, otherwise the error is answered".
+- Path: `/auth/login`
+- Description: This endpoint is for authenticating the user, it receives the username and password in plain text.
+  If the credentials are correct the access token is answered, otherwise the error is answered".
 
-- Request Body:
+`username`: Required
+
+`password`: Required
+
+✅ Good Request:
+
 ```json
 {
-    "username": "developer1",
-    "password": "GreatPassword_0000"        
+  "username": "developer1",
+  "password": "GreatPassword_0000"
 }
 ```
-- Response:
-```js
-200 OK
-```
+
+Response:
+
 ```json
+// 200 OK 🆗
 {
   "message": "Logged in successfully",
   "user": {
@@ -108,46 +117,35 @@ If the credentials are correct the access token is answered, otherwise the error
 }
 ```
 
+In case of the given credentials do not match our records:
 
-
-## Error Handling
-
-Errors are shown with the standard [Problem Details for HTTP APIs](https://datatracker.ietf.org/doc/html/rfc7807)
-> This document defines a "problem detail" as a way to carry machine-readable details of errors in a HTTP response to avoid the need to define new error response formats for HTTP APIs
-
-### Example of an error
-
-If we hit the `/register` endpoint with data that already exists in the database we get an error like the following one
 ```json
+{
+  "username": "user",
+  "password": "does not exists"
+}
+```
+
+Response:
+
+```json
+// 400 Bad Request ⚠️
 {
   "type": "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
   "status": 400,
   "title": "Bad Request",
-  "detail": "The registration data already exists in our records. Try another values.",
-  "errors": [
-    {
-      "code": "Register.UserAlreadyExists",
-      "description": "User already exists",
-      "type": "conflict"
-    },
-    {
-      "code": "Register.EmailAlreadyExists",
-      "description": "Email already exists",
-      "type": "conflict"
-    },
-    {
-      "code": "Register.PhoneAlreadyExists",
-      "description": "Phone already exists",
-      "type": "conflict"
-    },
-    {
-      "code": "Register.SchoolIdAlreadyExists",
-      "description": "School ID already exists",
-      "type": "conflict"
-    }
-  ]
+  "detail": "There is an error in your request.",
+  "errors": {
+    "InvalidCredentials": "Invalid username or password"
+  }
 }
 ```
+
+## Error Handling
+
+Errors are shown with the standard [Problem Details for HTTP APIs](https://datatracker.ietf.org/doc/html/rfc7807)
+
+> This document defines a "problem detail" as a way to carry machine-readable details of errors in a HTTP response to avoid the need to define new error response formats for HTTP APIs
 
 ## Contributing
 
