@@ -58,7 +58,7 @@ class AuthorizationMiddleware {
       )
         .status(401)
         .build();
-      res.status(pb.status).json(pb);
+      res.status(pb.status).json(pb.toJson());
     }
   };
 }

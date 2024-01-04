@@ -33,7 +33,7 @@ export class ApiController extends BaseHttpController {
     return response
       .setHeader("Content-Type", "application/problem+json")
       .status(400)
-      .json(problemDetails);
+      .json(problemDetails.toJson());
   }
 
   async validate<T>(
