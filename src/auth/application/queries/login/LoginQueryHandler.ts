@@ -6,7 +6,7 @@ import { AuthErrors } from "../../../domain/errors/AuthErrors";
 import { AuthenticationResponse } from "../../AuthenticationResponse";
 import { LoginQuery } from "./LoginQuery";
 import { inject, injectable } from "inversify";
-import { EMCO_INTERFACES } from "../../../../app/EMCO_INTERFACES";
+import { constants } from "../../../../app/constants";
 
 @requestHandler(LoginQuery)
 @injectable()
@@ -14,8 +14,9 @@ export class LoginQueryHandler
   implements IRequestHandler<LoginQuery, ErrorOr<AuthenticationResponse>>
 {
   constructor(
-    @inject(EMCO_INTERFACES.UserRepository) private userRepository: UserRepository,
-    @inject(EMCO_INTERFACES.IJWTProvider) private JWTProvider: IJWTProvider
+    @inject(constants.UserRepository)
+    private userRepository: UserRepository,
+    @inject(constants.IJWTProvider) private JWTProvider: IJWTProvider
   ) {}
 
   handle = async (
@@ -27,7 +28,7 @@ export class LoginQueryHandler
       return ErrorOr.failure(AuthErrors.InvalidCredentials);
     }
 
-    const token = this.JWTProvider.generate({ userId: user.id.value });
+    const token = this.JWTProvider.generate(user.toPrimitives());
 
     return ErrorOr.success(new AuthenticationResponse(query.username, token));
   };

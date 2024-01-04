@@ -10,7 +10,7 @@ import { ErrorOr } from "../../../../shared/domain/errors/ErrorOr";
 import { RegisterCommand } from "./RegisterCommand";
 import { IRequestHandler, requestHandler } from "mediatr-ts";
 import { inject, injectable } from "inversify";
-import { EMCO_INTERFACES } from "../../../../app/EMCO_INTERFACES";
+import { constants } from "../../../../app/constants";
 
 @requestHandler(RegisterCommand)
 @injectable()
@@ -18,9 +18,9 @@ export class RegisterCommandHandler
   implements IRequestHandler<RegisterCommand, ErrorOr<AuthenticationResponse>>
 {
   constructor(
-    @inject(EMCO_INTERFACES.UserRepository)
+    @inject(constants.UserRepository)
     private userRepository: UserRepository,
-    @inject(EMCO_INTERFACES.IJWTProvider) private JWTProvider: IJWTProvider
+    @inject(constants.IJWTProvider) private JWTProvider: IJWTProvider
   ) {}
 
   handle = async (
@@ -30,15 +30,15 @@ export class RegisterCommandHandler
       return ErrorOr.failure(RegisterErrors.UserAlreadyExists);
     }
 
-   const user = new User(
+    const user = new User(
       UserId.generate(),
       new Username(command.username),
       Password.hash(command.password)
-    ); 
+    );
 
     this.userRepository.save(user);
 
-    const token = this.JWTProvider.generate({ userId: user.id.value });
+    const token = this.JWTProvider.generate(user.toPrimitives());
 
     return ErrorOr.success(new AuthenticationResponse(command.username, token));
   };

@@ -1,6 +1,6 @@
-import { JWT } from "./value-objects/JWT";
+import { Claims } from "./value-objects/Claims";
 
 export interface IJWTProvider {
-  generate(payload: object): string;
-  validate(token: string): JWT | undefined;
+  generate(payload: Claims): string;
+  validate(token: string): Claims | undefined;
 }

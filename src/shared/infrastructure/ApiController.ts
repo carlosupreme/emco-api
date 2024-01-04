@@ -6,8 +6,22 @@ import {
   DomainErrorsToJson,
   JsonToValidationErrors,
 } from "../../app/mappings/mapper";
+import {
+  BaseHttpController,
+  HTTP_VERBS_ENUM,
+  HandlerDecorator,
+  httpMethod,
+} from "inversify-express-utils";
+import { authMiddlware } from "../../auth/infrastructure/AuthorizationMiddleware";
 
-export class ApiController {
+export const authorized = (
+  method: keyof typeof HTTP_VERBS_ENUM,
+  path: string
+): HandlerDecorator => {
+  return httpMethod(method, path, authMiddlware.middleware);
+};
+
+export class ApiController extends BaseHttpController {
   problem(errors: DomainError[], response: Response): Response {
     const responseErrors = DomainErrorsToJson(errors);
     const problemDetails = PDBuilder.fromDetail(
@@ -19,7 +33,7 @@ export class ApiController {
     return response
       .setHeader("Content-Type", "application/problem+json")
       .status(400)
-      .send(problemDetails.toString());
+      .json(problemDetails);
   }
 
   async validate<T>(

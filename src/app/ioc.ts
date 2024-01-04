@@ -6,8 +6,7 @@ import { UserRepository } from "../auth/domain/UserRepository";
 import { MySQLUserRepository } from "../auth/infrastructure/MySQLUserRepository";
 import { JsonWebTokenProvider } from "../auth/infrastructure/JsonWebTokenProvider";
 import { IJWTProvider } from "../auth/domain/JWTProvider";
-import { EMCO_INTERFACES } from "./EMCO_INTERFACES";
-import SessionValidator from "../auth/infrastructure/Session";
+import { constants } from "./constants";
 
 const container = new Container({
   skipBaseClassChecks: true,
@@ -34,19 +33,15 @@ class Resolver implements IResolver {
 
 mediatorSettings.resolver = new Resolver();
 
-export default function (): Container {
-  container.bind(Mediator).toConstantValue(new Mediator());
-  container.bind(MySQLConnection).toConstantValue(new MySQLConnection());
+container.bind(Mediator).toConstantValue(new Mediator());
+container.bind(MySQLConnection).toConstantValue(new MySQLConnection());
 
-  container
-    .bind<UserRepository>(EMCO_INTERFACES.UserRepository)
-    .to(MySQLUserRepository);
+container
+  .bind<UserRepository>(constants.UserRepository)
+  .to(MySQLUserRepository);
 
-  container
-    .bind<IJWTProvider>(EMCO_INTERFACES.IJWTProvider)
-    .to(JsonWebTokenProvider);
+container
+  .bind<IJWTProvider>(constants.IJWTProvider)
+  .to(JsonWebTokenProvider);
 
-  container.bind(SessionValidator).toSelf().inSingletonScope();
-
-  return container;
-}
+export { container };
